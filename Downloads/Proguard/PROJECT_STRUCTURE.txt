@@ -1,0 +1,63 @@
+ProGuard - Clean Project Structure
+==================================
+
+📁 Main Application Files:
+├── 🎯 app.py             # ← WORKING APPLICATION (RUN THIS!)
+├── 📝 README.md           # Simple guide for everyone
+├── 📋 requirements.txt    # Python dependencies
+├── 🔧 run.py             # Quick launcher
+
+📁 Core Application Code:
+├── 📦 models.py          # Database models
+├── 🛣️ routes.py          # Application routes
+├── 📨 notifications.py   # Notification system
+├── 🔧 utils.py          # Utility functions
+├── 📥 import_routes.py  # Import functionality
+
+📁 Swagger API Documentation:
+├── 📚 swagger.yaml      # API specification
+├── 🎨 swagger_ui.py     # Swagger UI integration
+└── 🌐 Access at: http://localhost:5000/api/docs
+
+📁 Organized Folders:
+├── 📂 src/proguard/      # Enterprise structure
+├── 📂 templates/        # HTML templates
+├── 📂 static/           # CSS, JS, images
+├── 📂 instance/         # Database files
+├── 📂 docs/             # All documentation
+│   ├── architecture/   # System design docs
+│   ├── api/           # API reference
+│   └── project_docs/  # All MD files & presentations
+├── 📂 scripts/         # Utility scripts
+│   └── demo/          # Demo and test files
+├── 📂 deployment/      # Docker & Kubernetes
+├── 📂 tests/          # Test suites
+└── 📂 logs/           # Application logs
+
+==================================
+HOW TO RUN PROGUARD:
+==================================
+
+Option 1: Direct Run (RECOMMENDED)
+   python app.py
+
+Option 2: Using launcher
+   python run.py
+
+==================================
+ACCESS POINTS:
+==================================
+
+🌐 Main Application: http://localhost:5000
+📚 Swagger API Docs: http://localhost:5000/api/docs
+📊 Test Data: http://localhost:5000/api/docs/test-data
+
+==================================
+LOGIN CREDENTIALS:
+==================================
+
+👑 Admin:    admin / admin123
+👔 Manager:  manager1 / manager123
+👤 Vendor:   vendor1 / vendor123
+
+==================================

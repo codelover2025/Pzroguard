@@ -1,0 +1,939 @@
+{% extends "base_unified.html" %}
+
+{% block content %}
+<div class="top-header">
+    <div>
+        <h2>Welcome back, {{ current_user.username.title() }}</h2>
+        <p class="text-muted mb-0">Here is what's happening today in your workspace.</p>
+    </div>
+    {% if current_user.role.value == 'vendor' %}
+    <button class="btn-pg-primary" data-bs-toggle="modal" data-bs-target="#submitStatusModal">
+        <i class="fas fa-plus me-2"></i>Submit Status
+    </button>
+    {% endif %}
+</div>
+
+<!-- ========================================== -->
+<!-- PANEL 1: ProGuard Behavior Analytics       -->
+<!-- ========================================== -->
+{% if current_user.role.value != 'admin' %}
+<section id="panel-analytics" class="dashboard-panel active">
+    
+    <div class="row mb-4">
+        <!-- Main Work Authenticity Score -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 text-center h-100 d-flex flex-column justify-content-center">
+                <h5 class="mb-4 text-start"><i class="fas fa-shield-halved me-2" style="color:var(--pg-accent-1)"></i> Work Authenticity</h5>
+                
+                <div class="position-relative mx-auto mb-3" style="width: 180px; height: 180px;">
+                    <svg viewBox="0 0 36 36" style="width:100%; height:100%;">
+                        <!-- Background Circle -->
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            style="fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 3;" />
+                        <!-- Progress Circle -->
+                        <path class="circle-progress"
+                            stroke-dasharray="0, 100"
+                            id="scoreCircleDash"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            style="fill: none; stroke: url(#gradient); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 1s ease-out;" />
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#3b82f6" />
+                                <stop offset="100%" stop-color="#8b5cf6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <h2 class="mb-0 fw-bold" id="mainScore" style="font-size: 2.5rem;">--</h2>
+                        <small class="text-muted">/ 100</small>
+                    </div>
+                </div>
+                
+                <div class="mt-auto">
+                    <span class="badge bg-secondary px-3 py-2 fs-6 rounded-pill" id="riskLevel">Risk: --</span>
+                </div>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button id="btnStart" class="btn-pg-primary flex-grow-1"><i class="fas fa-play me-2"></i>Monitor</button>
+                    <button id="btnStop" class="btn-pg-outline flex-grow-1" disabled><i class="fas fa-stop me-2"></i>Stop</button>
+                </div>
+                <!-- Status specific info -->
+                <div class="mt-3 text-center">
+                    <small id="statusText" class="text-muted"><i class="fas fa-circle ms-1" style="font-size: 8px;"></i> Not Running</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details & Explainability -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2" style="color:var(--pg-accent-2)"></i> AI Insights & Breakdown</h5>
+                    <button class="btn btn-sm btn-pg-outline" id="btnGenerateReport"><i class="fas fa-file-pdf"></i> Report</button>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-keyboard text-muted me-2"></i> Typing Naturalness</span>
+                                <strong id="typingVal">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                <div class="progress-bar" id="typingBar" style="width: 0%; background: var(--pg-accent-1);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-mouse text-muted me-2"></i> Mouse Entropy</span>
+                                <strong id="mouseVal">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                <div class="progress-bar" id="mouseBar" style="width: 0%; background: var(--pg-accent-2);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-eye text-muted me-2"></i> Gaze Presence</span>
+                                <strong id="gazeVal">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                <div class="progress-bar" id="gazeBar" style="width: 0%; background: var(--pg-success);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-window-maximize text-muted me-2"></i> App Focus Ratio</span>
+                                <strong id="appVal">0%</strong>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                <div class="progress-bar" id="appBar" style="width: 0%; background: var(--pg-warning);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="p-3 rounded-3" style="background: rgba(59, 130, 246, 0.05); border-left: 3px solid var(--pg-accent-1);">
+                    <h6 class="text-primary mb-2">SHAP Explainability</h6>
+                    <div id="explanation">
+                        <p class="text-muted mb-0 small">Start monitoring to view behavior reasoning...</p>
+                    </div>
+                    <ul id="recList" class="text-muted small mt-2 ps-3 mb-0"></ul>
+                </div>
+                
+                <div id="breakRecommendation" class="mt-3"></div>
+
+            </div>
+        </div>
+    </div>
+    
+    <!-- Secondary Analytics Row -->
+    <div class="row g-4">
+        <div class="col-md-4">
+             <div class="glass-panel p-4 h-100">
+                <h6 class="mb-3"><i class="fas fa-face-smile-wink me-2" style="color:var(--pg-accent-2)"></i> Emotion & Focus</h6>
+                <div id="webcamStatus">
+                    <p class="text-muted small">Awaiting data...</p>
+                </div>
+             </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100">
+                <h6 class="mb-3"><i class="fas fa-robot me-2 text-danger"></i> Macro & Fake Activity</h6>
+                <div id="macroStatus">
+                    <p class="text-muted small">Awaiting data...</p>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between small">
+                        <span>Anomaly Score</span>
+                        <span id="anomalyVal">0%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px; background: rgba(255,255,255,0.1);">
+                        <div class="progress-bar bg-danger" id="anomalyBar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+             <div class="glass-panel p-4 h-100">
+                <h6 class="mb-3"><i class="fas fa-fire me-2 text-warning"></i> Heatmap & Timeline</h6>
+                <div class="text-center">
+                    <img id="heatmapImage" src="" alt="Heatmap" style="max-width: 100%; border-radius: 8px; display: none;">
+                    <p id="heatmapPlaceholder" class="text-muted small mb-0 p-3 rounded" style="background: rgba(0,0,0,0.2);">Generating temporal heatmap...</p>
+                </div>
+             </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+<!-- ========================================== -->
+<!-- PANEL 2: Attendance Tracking               -->
+<!-- ========================================== -->
+<section id="panel-attendance" class="dashboard-panel">
+    <div class="glass-panel p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0"><i class="fas fa-calendar-check me-2" style="color:var(--pg-success)"></i> Recent Attendance Status</h5>
+            {% if current_user.role.value == 'vendor' %}
+            <button class="btn btn-sm btn-pg-outline" onclick="exportMonthlyReport()"><i class="fas fa-file-excel me-2"></i>Export Monthly Report</button>
+            {% endif %}
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Approval</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if recent_statuses %}
+                        {% for status in recent_statuses %}
+                        <tr>
+                            <td>{{ status.status_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ current_user.username }}</td>
+                            <td>
+                                {% if status.status.value == 'in_office_full' %}
+                                    <span class="badge bg-success">Office Full</span>
+                                {% elif status.status.value == 'wfh_full' %}
+                                    <span class="badge bg-info">WFH Full</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ status.status.value.replace('_', ' ').title() }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ status.location or '-' }}</td>
+                            <td>
+                                {% if status.approval_status.value == 'pending' %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
+                                {% elif status.approval_status.value == 'approved' %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Approved</span>
+                                {% elif status.approval_status.value == 'rejected' %}
+                                    <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if current_user.role.value == 'vendor' and status.approval_status.value in ['pending', 'rejected'] %}
+                                    <button class="btn btn-sm btn-outline-info rounded-circle" title="Edit" onclick="editStatus('{{ status.id }}')"><i class="fas fa-edit"></i></button>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No recent attendance records found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ========================================== -->
+<!-- PANEL 3: Team Monitor (Managers+)          -->
+<!-- ========================================== -->
+{% if current_user.role.value in ['manager', 'admin'] %}
+<section id="panel-team" class="dashboard-panel">
+    <div class="row mb-4 g-4">
+        <div class="col-md-3">
+             <div class="glass-panel p-4 text-center">
+                 <h2 class="text-white mb-0 fw-bold">{{ team_stats.total_members if team_stats else '0' }}</h2>
+                 <p class="text-muted small mb-0">Total Team</p>
+             </div>
+        </div>
+        <div class="col-md-3">
+             <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-success);">
+                 <h2 class="text-white mb-0 fw-bold">{{ team_stats.present_today if team_stats else '0' }}</h2>
+                 <p class="text-muted small mb-0">Present Today</p>
+             </div>
+        </div>
+        <div class="col-md-3">
+             <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-warning);">
+                 <h2 class="text-white mb-0 fw-bold">{{ team_stats.pending_approvals if team_stats else '0' }}</h2>
+                 <p class="text-muted small mb-0">Pending Approvals</p>
+             </div>
+        </div>
+        <div class="col-md-3">
+             <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-danger);">
+                 <h2 class="text-white mb-0 fw-bold">{{ team_stats.mismatches if team_stats else '0' }}</h2>
+                 <p class="text-muted small mb-0">Mismatches</p>
+             </div>
+        </div>
+    </div>
+    
+    <div class="glass-panel p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0"><i class="fas fa-users-viewfinder me-2" style="color:var(--pg-accent-1)"></i> Today's Overview</h5>
+            <div>
+                <button class="btn btn-sm btn-success" onclick="bulkAction('approve')"><i class="fas fa-check-double me-1"></i>Approve All Pending</button>
+                <button class="btn btn-sm btn-danger ms-2" onclick="bulkAction('reject')"><i class="fas fa-times me-1"></i>Reject All Pending</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Status</th>
+                        <th>Submitted At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if today_statuses %}
+                        {% for status_item in today_statuses %}
+                        <tr {% if status_item.status and status_item.status.approval_status.value == 'pending' %}class="pending-status-row" data-status-id="{{ status_item.status.id }}"{% endif %}>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:var(--pg-accent-2); display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                        {{ status_item.vendor.vendor_id[:2] }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ status_item.vendor.full_name }}</div>
+                                        <div class="small text-muted">{{ status_item.vendor.user_account.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if status_item.status %}
+                                    {% if status_item.status.status.value == 'in_office_full' %}
+                                        <span class="badge bg-success">Office Full</span>
+                                    {% elif status_item.status.status.value == 'wfh_full' %}
+                                        <span class="badge bg-info">WFH Full</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ status_item.status.status.value }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Not Submitted</span>
+                                {% endif %}
+                                
+                                {% if status_item.has_mismatch %}
+                                    <span class="badge bg-danger ms-1" title="Mismatch detected"><i class="fas fa-exclamation"></i></span>
+                                {% endif %}
+                            </td>
+                            <td>{{ status_item.status.submitted_at.strftime('%I:%M %p') if status_item.status and status_item.status.submitted_at else '-' }}</td>
+                            <td>
+                                {% if status_item.status and status_item.status.approval_status.value == 'pending' %}
+                                    <button class="btn btn-sm btn-success rounded-circle" onclick="approveStatus('{{ status_item.status.id }}')"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm btn-danger rounded-circle ms-1" onclick="rejectStatus('{{ status_item.status.id }}')"><i class="fas fa-times"></i></button>
+                                {% elif not status_item.status %}
+                                    <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="remindVendor('{{ status_item.vendor.id }}')"><i class="fas fa-bell me-1"></i>Remind</button>
+                                {% else %}
+                                    <span class="text-muted small"><i class="fas fa-check-double text-success"></i> Handled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No team members data found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ========================================== -->
+<!-- PANEL 4: Mismatches (Managers+)            -->
+<!-- ========================================== -->
+<section id="panel-mismatches" class="dashboard-panel">
+    <div class="glass-panel p-4">
+        <h5 class="mb-4"><i class="fas fa-triangle-exclamation me-2 text-warning"></i> Attendance Mismatches</h5>
+        <div class="alert mb-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24;">
+            Review discrepancies between Web Statuses and Backend Swipe/ProGuard data.
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Vendor</th>
+                        <th>Stated Status</th>
+                        <th>Actual Record</th>
+                        <th>Explanation</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_mismatches %}
+                        {% for mismatch in pending_mismatches %}
+                        <tr>
+                            <td>{{ mismatch.mismatch_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ mismatch.vendor.full_name }}</td>
+                            <td><span class="badge bg-info">{{ mismatch.web_status.value if mismatch.web_status else 'None' }}</span></td>
+                            <td><span class="badge bg-secondary">{{ mismatch.swipe_status or 'None' }}</span></td>
+                            <td class="small text-muted" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ mismatch.vendor_reason }}">
+                                {{ mismatch.vendor_reason or 'No explanation provided.' }}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-success rounded-circle" title="Approve" onclick="handleMismatch('{{ mismatch.id }}', 'approve')"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-sm btn-danger rounded-circle ms-1" title="Reject" onclick="handleMismatch('{{ mismatch.id }}', 'reject')"><i class="fas fa-times"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4"><i class="fas fa-check-circle text-success fs-4 mb-2 d-block"></i> All clear. No active mismatches.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+<!-- ========================================== -->
+<!-- PANEL 5: System Admin                      -->
+<!-- ========================================== -->
+{% if current_user.role.value == 'admin' %}
+<section id="panel-admin" class="dashboard-panel">
+    <!-- System Stats Row -->
+    <div class="row mb-4 g-4">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-accent-1);">
+                <h2 class="text-white mb-0 fw-bold">{{ total_vendors }}</h2>
+                <p class="text-muted small mb-0">Total Vendors</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-accent-2);">
+                <h2 class="text-white mb-0 fw-bold">{{ total_managers }}</h2>
+                <p class="text-muted small mb-0">Total Managers</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-success);">
+                <h2 class="text-white mb-0 fw-bold">{{ total_statuses_today }}</h2>
+                <p class="text-muted small mb-0">Submissions Today</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center" style="border-bottom: 2px solid var(--pg-warning);">
+                <h2 class="text-white mb-0 fw-bold">{{ team_stats.mismatches if team_stats else 0 }}</h2>
+                <p class="text-muted small mb-0">Open Mismatches</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Company-wide Overview -->
+    <div class="glass-panel p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0"><i class="fas fa-building me-2" style="color:var(--pg-accent-1)"></i> Company-Wide Today's Overview</h5>
+            <div>
+                <button class="btn btn-sm btn-success" onclick="bulkAction('approve')"><i class="fas fa-check-double me-1"></i>Approve All Pending</button>
+                <button class="btn btn-sm btn-danger ms-2" onclick="bulkAction('reject')"><i class="fas fa-times me-1"></i>Reject All</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Status</th>
+                        <th>Submitted At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if today_statuses %}
+                        {% for status_item in today_statuses %}
+                        <tr {% if status_item.status and status_item.status.approval_status.value == 'pending' %}class="pending-status-row" data-status-id="{{ status_item.status.id }}"{% endif %}>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:var(--pg-accent-1); display:flex; align-items:center; justify-content:center; font-weight:bold;">
+                                        {{ status_item.vendor.vendor_id[:2] }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ status_item.vendor.full_name }}</div>
+                                        <div class="small text-muted">{{ status_item.vendor.department or '' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if status_item.status %}
+                                    {% if status_item.status.status.value == 'in_office_full' %}
+                                        <span class="badge bg-success">Office Full</span>
+                                    {% elif status_item.status.status.value == 'wfh_full' %}
+                                        <span class="badge bg-info">WFH Full</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ status_item.status.status.value.replace('_', ' ').title() }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Not Submitted</span>
+                                {% endif %}
+                                {% if status_item.has_mismatch %}
+                                    <span class="badge bg-danger ms-1" title="Mismatch"><i class="fas fa-exclamation"></i></span>
+                                {% endif %}
+                            </td>
+                            <td>{{ status_item.status.submitted_at.strftime('%I:%M %p') if status_item.status and status_item.status.submitted_at else '-' }}</td>
+                            <td>
+                                {% if status_item.status and status_item.status.approval_status.value == 'pending' %}
+                                    <button class="btn btn-sm btn-success rounded-circle" onclick="approveStatus('{{ status_item.status.id }}')"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm btn-danger rounded-circle ms-1" onclick="rejectStatus('{{ status_item.status.id }}')"><i class="fas fa-times"></i></button>
+                                {% else %}
+                                    <span class="text-muted small"><i class="fas fa-check-double text-success"></i> Handled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No attendance submissions found for today.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Mismatches (Admin) -->
+    <div class="glass-panel p-4">
+        <h5 class="mb-4"><i class="fas fa-triangle-exclamation me-2 text-warning"></i> Pending Mismatches (Company-wide)</h5>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th><th>Vendor</th><th>Stated Status</th><th>Actual Record</th><th>Explanation</th><th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if pending_mismatches %}
+                        {% for mismatch in pending_mismatches %}
+                        <tr>
+                            <td>{{ mismatch.mismatch_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ mismatch.vendor.full_name }}</td>
+                            <td><span class="badge bg-info">{{ mismatch.web_status.value if mismatch.web_status else 'None' }}</span></td>
+                            <td><span class="badge bg-secondary">{{ mismatch.swipe_status or 'None' }}</span></td>
+                            <td class="small text-muted" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ mismatch.vendor_reason or 'No explanation provided.' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success rounded-circle" onclick="handleMismatch('{{ mismatch.id }}', 'approve')"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-sm btn-danger rounded-circle ms-1" onclick="handleMismatch('{{ mismatch.id }}', 'reject')"><i class="fas fa-times"></i></button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4"><i class="fas fa-check-circle text-success fs-4 mb-2 d-block"></i> No pending mismatches.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+
+<!-- ========================================== -->
+<!-- Status Submission Modal (vendors)          -->
+<!-- ========================================== -->
+<div class="modal fade" id="submitStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel" style="background: var(--pg-bg-secondary)">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title">Submit Daily Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('vendor_submit_status') if current_user.role.value == 'vendor' else '#' }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Status</label>
+                        <select class="form-select" name="status" required>
+                            <option value="">Select Status</option>
+                            <option value="in_office_full">In Office - Full Day</option>
+                            <option value="wfh_full">Work From Home - Full Day</option>
+                            <option value="leave_full">On Leave - Full Day</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Location</label>
+                        <input type="text" class="form-control" name="location" placeholder="e.g., Home, Office HQ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Comments</label>
+                        <textarea class="form-control" name="comments" rows="2" placeholder="Tasks done today..."></textarea>
+                    </div>
+                    <input type="hidden" name="status_date" value="{{ today.strftime('%Y-%m-%d') if today else '' }}">
+                </div>
+                <div class="modal-footer border-top-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-pg-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-pg-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // -------------------------------------------------------------------------
+    // ProGuard Analytics Live Data Integration logic (migrated from old dashboard)
+    // -------------------------------------------------------------------------
+    let monitoringActive = false;
+    let refreshInterval = null;
+
+    // -------------------------------------------------------------------------
+    // Manager and Team Actions
+    // -------------------------------------------------------------------------
+    async function handleStatusAction(statusId, action, reason = '') {
+        const formData = new FormData();
+        formData.append('action', action);
+        formData.append('reason', reason);
+        
+        try {
+            const response = await fetch(`/manager/approve-status/${statusId}`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert(result.message);
+                location.reload(); 
+            } else {
+                alert(result.error || result.message);
+            }
+        } catch (e) {
+            alert('Failed to process request');
+        }
+    }
+
+    function approveStatus(statusId) {
+        if(confirm("Approve this status?")) {
+            handleStatusAction(statusId, 'approve');
+        }
+    }
+
+    function rejectStatus(statusId) {
+        const reason = prompt("Enter reason for rejection (optional):");
+        if (reason !== null) {
+            handleStatusAction(statusId, 'reject', reason);
+        }
+    }
+
+    function handleMismatch(mismatchId, action) {
+        const comments = prompt(`Enter comments for ${action}ing this mismatch (optional):`) || '';
+        if (comments !== null) {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('comments', comments);
+            
+            fetch(`/manager/mismatch/${mismatchId}/approve`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                 if(result.status === 'success') {
+                     alert(result.message);
+                     location.reload();
+                 } else {
+                     alert(result.error || result.message);
+                 }
+            }).catch(e => alert("Failed to process request."));
+        }
+    }
+
+    async function bulkAction(action) {
+        const rows = document.querySelectorAll('.pending-status-row');
+        const statusIds = Array.from(rows).map(row => parseInt(row.dataset.statusId));
+        
+        if (statusIds.length === 0) {
+            alert('No pending statuses to ' + action + '.');
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to ${action} ${statusIds.length} pending statuses?`)) return;
+        
+        const reason = prompt(`Enter reason for ${action} (optional):`) || '';
+        if (reason === null) return;
+        
+        try {
+            const response = await fetch('/manager/approve-status/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action, status_ids: statusIds, reason: reason })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert(`Successfully ${action}d ${result.updated} statuses.`);
+                location.reload();
+            } else {
+                alert(result.error || result.message);
+            }
+        } catch (e) {
+            alert('Failed to process bulk action.');
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // ProGuard Specific Logic
+    // -------------------------------------------------------------------------
+    const btnReport = document.getElementById('btnGenerateReport');
+    if (btnReport) {
+        btnReport.addEventListener('click', async () => {
+             btnReport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+             btnReport.disabled = true;
+             try {
+                 const res = await fetch('/api/proguard/generate-report', {method: 'POST'});
+                 const data = await res.json();
+                 if (data.status === 'success') {
+                     alert('Report generated successfully at: ' + data.report_path);
+                 } else {
+                     alert('Error generating report: ' + data.message);
+                 }
+             } catch(e) {
+                 alert('Failed to generate report');
+             } finally {
+                 btnReport.innerHTML = '<i class="fas fa-file-pdf"></i> Report';
+                 btnReport.disabled = false;
+             }
+        });
+    }
+
+    // -------------------------------------------------------------------------
+    // Vendor and General Actions
+    // -------------------------------------------------------------------------
+    function exportMonthlyReport() {
+        const currentDate = new Date();
+        const month = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+        window.location.href = `/api/export/monthly-report?month=${month}&format=excel`;
+    }
+
+    async function editStatus(statusId) {
+        try {
+            const res = await fetch(`/vendor/edit-status/${statusId}`);
+            const data = await res.json();
+            if(data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            // Populate and show the generic status modal
+            const modalForm = document.querySelector('#submitStatusModal form');
+            modalForm.action = `/vendor/edit-status/${statusId}`;
+            
+            modalForm.querySelector('[name="status"]').value = data.status || '';
+            modalForm.querySelector('[name="location"]').value = data.location || '';
+            modalForm.querySelector('[name="comments"]').value = data.comments || '';
+            
+            const modalEl = document.getElementById('submitStatusModal');
+            const modalTitle = modalEl.querySelector('.modal-title');
+            if(modalTitle) modalTitle.textContent = 'Edit Daily Status';
+            
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        } catch (e) {
+            alert('Failed to load status details.');
+        }
+    }
+
+    async function remindVendor(vendorId) {
+        try {
+            const res = await fetch(`/manager/remind-vendor/${vendorId}`, {method: 'POST'});
+            const data = await res.json();
+            if(data.status === 'success') alert(data.message);
+            else alert(data.error || data.message || 'Failed to send reminder.');
+        } catch (e) {
+            alert('Failed to send reminder.');
+        }
+    }
+
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+
+    if (btnStart && btnStop) {
+        btnStart.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/proguard/start', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    monitoringActive = true;
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-circle ms-1 text-success" style="font-size: 8px; animation: pulse 2s infinite;"></i> Monitoring Active';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    
+                    refreshInterval = setInterval(refreshDashboard, 3000);
+                    refreshDashboard();
+                } else {
+                    alert('Error starting monitoring: ' + data.message);
+                }
+            } catch (err) { console.error(err); }
+        });
+
+        btnStop.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/proguard/stop', { method: 'POST' });
+                monitoringActive = false;
+                document.getElementById('statusText').innerHTML = '<i class="fas fa-circle ms-1" style="font-size: 8px;"></i> Not Running';
+                btnStart.disabled = false;
+                btnStop.disabled = true;
+                if (refreshInterval) clearInterval(refreshInterval);
+            } catch (err) { console.error(err); }
+        });
+    }
+
+    async function refreshDashboard() {
+        if(!monitoringActive) return;
+        try {
+            const response = await fetch('/api/proguard/dashboard');
+            const result = await response.json();
+            
+            console.log('Dashboard response:', result.status);
+
+            if (result.status === 'not_started') {
+                console.log('Monitoring not started on server yet');
+                return;
+            }
+
+            if (result.status === 'success' && result.data) {
+                const data = result.data;
+                const score = Math.round(data.current_score || 0);
+
+                // --- SECTION 1: Score circle ---
+                try {
+                    document.getElementById('mainScore').textContent = score;
+                    const strokeArr = `${score}, 100`;
+                    document.getElementById('scoreCircleDash').setAttribute('stroke-dasharray', strokeArr);
+
+                    let gradientStr = `<stop offset="0%" stop-color="#3b82f6" /><stop offset="100%" stop-color="#8b5cf6" />`;
+                    let riskClass = "bg-secondary";
+                    let riskText = "UNKNOWN";
+
+                    if (score >= 80) {
+                        gradientStr = `<stop offset="0%" stop-color="#10b981" /><stop offset="100%" stop-color="#059669" />`;
+                        riskClass = "bg-success"; riskText = "LOW";
+                    } else if (score >= 50) {
+                        gradientStr = `<stop offset="0%" stop-color="#f59e0b" /><stop offset="100%" stop-color="#d97706" />`;
+                        riskClass = "bg-warning text-dark"; riskText = "MEDIUM";
+                    } else {
+                        gradientStr = `<stop offset="0%" stop-color="#ef4444" /><stop offset="100%" stop-color="#b91c1c" />`;
+                        riskClass = "bg-danger"; riskText = "HIGH";
+                    }
+                    document.querySelector('#gradient').innerHTML = gradientStr;
+
+                    const rlElem = document.getElementById('riskLevel');
+                    rlElem.className = `badge ${riskClass} px-3 py-2 fs-6 rounded-pill`;
+                    rlElem.textContent = `Risk: ${riskText}`;
+                } catch(e) { console.error('Score section error:', e); }
+
+                // --- SECTION 2: Signal bars ---
+                try {
+                    const setBar = (id, val) => {
+                        const pct = Math.round((val || 0) * 100);
+                        const valEl = document.getElementById(id + 'Val');
+                        const barEl = document.getElementById(id + 'Bar');
+                        if (valEl) valEl.textContent = pct + '%';
+                        if (barEl) barEl.style.width = pct + '%';
+                    };
+                    if (data.signals) {
+                        setBar('typing', data.signals.typing_entropy);
+                        setBar('mouse', data.signals.mouse_entropy);
+                        setBar('gaze', data.signals.gaze_presence);
+                        setBar('app', data.signals.app_focus);
+                        setBar('emotion', data.signals.emotion_focus);
+                        setBar('anomaly', 1 - (data.signals.anomaly_score || 0));
+                    }
+                } catch(e) { console.error('Signal bars error:', e); }
+
+                // --- SECTION 3: AI Explanation (SHAP) ---
+                try {
+                    if (data.explanation && data.explanation.assessment) {
+                        document.getElementById('explanation').innerHTML = `<p class="small mb-1 mt-2 text-white">${data.explanation.assessment}</p>`;
+                        const recList = document.getElementById('recList');
+                        if (recList && data.explanation.recommendations && data.explanation.recommendations.length > 0) {
+                            recList.innerHTML = data.explanation.recommendations.map(r => `<li><i class="fas fa-arrow-right me-1 text-primary"></i>${r}</li>`).join('');
+                        } else if (recList) {
+                            recList.innerHTML = '<li class="text-muted">No specific recommendations at this time.</li>';
+                        }
+                    }
+                } catch(e) { console.error('Explanation error:', e); }
+
+                // --- SECTION 4: Webcam / Emotion & Focus ---
+                try {
+                    if (data.webcam_status) {
+                        document.getElementById('webcamStatus').innerHTML = `
+                            <div class="d-flex justify-content-between small text-muted mb-2"><span>Presence</span> <span class="text-white">${Math.round((data.webcam_status.presence_ratio||0)*100)}%</span></div>
+                            <div class="d-flex justify-content-between small text-muted mb-2"><span>Attention</span> <span class="text-white">${Math.round((data.webcam_status.attention_ratio||0)*100)}%</span></div>
+                            <div class="d-flex justify-content-between small text-muted"><span>Emotion Focus</span> <span class="text-white">${data.webcam_status.dominant_emotion || 'Neutral'}</span></div>
+                        `;
+                    }
+                } catch(e) { console.error('Webcam section error:', e); }
+
+                // --- SECTION 5: Macro & Fake Activity ---
+                try {
+                    if (data.macro_detection) {
+                        document.getElementById('macroStatus').innerHTML = `
+                            <div class="mb-2 small"><span class="text-muted">Keyboard Macro:</span> <span class="${data.macro_detection.keyboard_macro_detected ? 'text-danger fw-bold' : 'text-success'}">${data.macro_detection.keyboard_macro_detected ? 'Detected!' : 'Clear'}</span></div>
+                            <div class="mb-2 small"><span class="text-muted">Mouse Macro:</span> <span class="${data.macro_detection.mouse_macro_detected ? 'text-danger fw-bold' : 'text-success'}">${data.macro_detection.mouse_macro_detected ? 'Detected!' : 'Clear'}</span></div>
+                        `;
+                    }
+                } catch(e) { console.error('Macro section error:', e); }
+
+                // --- SECTION 6: Heatmap ---
+                try {
+                    if (data.heatmap_daily) {
+                        const hmImg = document.getElementById('heatmapImage');
+                        if (hmImg) {
+                            hmImg.src = data.heatmap_daily;
+                            hmImg.style.display = 'block';
+                        }
+                        const hmPlaceholder = document.getElementById('heatmapPlaceholder');
+                        if (hmPlaceholder) hmPlaceholder.style.display = 'none';
+                    }
+                } catch(e) { console.error('Heatmap section error:', e); }
+            }
+        } catch (error) {
+            console.error('Error refreshing dashboard:', error);
+        }
+    }
+
+    // Break recommender
+    setInterval(async () => {
+        if (!monitoringActive) return;
+        try {
+            const response = await fetch('/api/proguard/break-recommendation');
+            const data = await response.json();
+            if (data.recommended) {
+                document.getElementById('breakRecommendation').innerHTML = `
+                    <div class="p-3 rounded mt-3" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245,158,11,0.3);">
+                        <strong class="text-warning"><i class="fas fa-coffee me-2"></i>Break Recommended!</strong><br>
+                        <small class="text-muted">${data.reason}</small>
+                    </div>`;
+            } else {
+                document.getElementById('breakRecommendation').innerHTML = '';
+            }
+        } catch(e){}
+    }, 20000);
+</script>
+<style>
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.5); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+</style>
+{% endblock %}

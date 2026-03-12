@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proguard-app
+  namespace: proguard
+  labels:
+    app: proguard
+    component: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: proguard
+      component: web
+  template:
+    metadata:
+      labels:
+        app: proguard
+        component: web
+    spec:
+      containers:
+      - name: proguard-app
+        image: proguard:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: proguard-secrets
+              key: database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: proguard-secrets
+              key: secret-key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+        - name: reports-storage
+          mountPath: /app/reports
+      volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: proguard-uploads-pvc
+      - name: reports-storage
+        persistentVolumeClaim:
+          claimName: proguard-reports-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proguard-service
+  namespace: proguard
+spec:
+  selector:
+    app: proguard
+    component: web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: proguard-ingress
+  namespace: proguard
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - proguard.local
+    secretName: proguard-tls
+  rules:
+  - host: proguard.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: proguard-service
+            port:
+              number: 80

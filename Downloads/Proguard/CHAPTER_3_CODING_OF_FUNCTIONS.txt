@@ -1,0 +1,159 @@
+CHAPTER 3: CODING OF FUNCTIONS
+
+This chapter describes the implementation of the major modules used in the AI-Based Fake Productivity Detection System ProGuard. The system consists of multiple functional components that work together to analyze user behavior and determine the authenticity of work activity. Each module processes specific behavioral signals such as typing patterns, mouse movements, gaze direction, and facial emotions.
+The coding of these functions was implemented using Python programming language along with several machine learning and computer vision libraries including OpenCV, DeepFace, NumPy, and optional Keras/TensorFlow.
+
+3.1 Pattern Detection
+This component monitors typing rhythm and mouse movement to flag repetitive or automated behavior. By utilizing statistical analysis (Shannon entropy), timing variance analysis, and optional LSTM neural networks, the system can reliably distinguish between a human user and a bot or macro. Implemented in src/proguard/collectors/mouse_keyboard.py, src/proguard/analytics/typing_rhythm.py, and src/proguard/analytics/macro_detector.py.
+
+Algorithms and Methods
+•	Keystroke Timing: Measures intervals between keys and detects low variance (<0.1 coefficient) indicating macros.
+•	Typing Rhythm Analysis: LSTM model or entropy classifies temporal sequences as human or synthetic; rhythm_entropy normalized 0-1.
+•	Shannon Entropy: Measures randomness in mouse angles/keystroke intervals. Low entropy (<0.35) flags robotic patterns.
+•	Macro Sequence Detection: Repeated identical sequences (count>=3) with timing variance<0.01; ML IsolationForest for mouse anomalies.
+
+Sample Code (MouseKeyboardCollector - Entropy Calculation)
+```python
+from src.proguard.collectors.mouse_keyboard import MouseKeyboardCollector
+
+collector = MouseKeyboardCollector()
+
+# Simulate data collection (callbacks in real-time)
+# collector.on_mouse_move(x, y); collector.on_key_press(key)
+
+# Get authenticity metrics
+metrics = collector.get_current_metrics()
+# metrics['mouse_entropy'] -> 0-1 (low=repetitive)
+# metrics['keyboard_entropy'] -> 0-1 randomness
+# metrics['macro_detected'] -> True if variance <0.1
+print(metrics)
+```
+
+Sample Code (TypingRhythmAnalyzer)
+```python
+from src.proguard.analytics.typing_rhythm import TypingRhythmAnalyzer
+
+analyzer = TypingRhythmAnalyzer()
+analyzer.add_keystroke(time.time(), 'a')  # Real-time addition
+
+metrics = analyzer.get_current_metrics()
+# metrics['typing_authenticity'] -> 0-1 (LSTM prediction)
+# metrics['rhythm_entropy'] -> normalized randomness
+```
+
+3.2 Emotion Detection
+The emotion detection engine analyzes facial expressions in real-time to track how a user's emotional state aligns with workplace engagement. Implemented in src/proguard/collectors/webcam_monitor.py.
+
+Implementation Details
+•	Primary Engine: DeepFace library for CNN-based emotion classification (7 classes: angry, disgust, fear, happy, sad, surprise, neutral).
+•	Fallback: Brightness/contrast heuristics if DeepFace unavailable.
+•	emotion_focus: Weighted score (neutral=1.0, happy=0.9, sad=0.3, etc.).
+•	Detections: Runs every 5th frame to reduce compute; stores history for distribution.
+
+Sample Code (Emotion Analysis)
+```python
+from src.proguard.collectors.webcam_monitor import WebcamMonitor
+
+monitor = WebcamMonitor()
+# Starts in background thread
+
+def detect_emotion(frame):
+    if hasattr(monitor, 'detect_emotion'):
+        emotion = monitor.detect_emotion(frame)
+        return emotion  # e.g., 'neutral'
+    return 'neutral'
+
+webcam_metrics = monitor.get_current_metrics()
+# webcam_metrics['emotion_distribution'] -> {'neutral': 0.7, 'happy': 0.2}
+# webcam_metrics['dominant_emotion'] -> 'neutral'
+# emotion_focus calculated in ProGuardMonitor._calculate_emotion_focus()
+```
+
+3.3 Gaze Tracking
+This module tracks user attention by determining if they are focused on the active workspace. Uses efficient Haar Cascades for low latency. Implemented in src/proguard/collectors/webcam_monitor.py.
+
+Real-World Logic
+1.	Face Detection: haarcascade_frontalface_default.xml.
+2.	Eye Localization: haarcascade_eye.xml within face ROI.
+3.	Validation: Both eyes detected -> \"Looking at screen\"; else \"Looking away\".
+4.	attention_ratio: % time eyes on screen (gaze_history deque).
+
+Sample Code (Gaze Detection)
+```python
+import cv2
+from src.proguard.collectors.webcam_monitor import WebcamMonitor
+
+# Cascades loaded automatically
+monitor = WebcamMonitor()
+
+def check_gaze(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = monitor.face_cascade.detectMultiScale(gray, 1.1, 5)
+    for (x, y, w, h) in faces:
+        face_gray = gray[y:y+h, x:x+w]
+        eyes = monitor.eye_cascade.detectMultiScale(face_gray)
+        if len(eyes) >= 2:
+            return 'Looking at screen'
+    return 'Looking away'
+
+metrics = monitor.get_current_metrics()
+# metrics['attention_ratio'] -> 0-1 (% gaze on screen)
+# metrics['gaze_history'] -> list of booleans
+```
+
+3.4 Authenticity Score Calculation
+Rolls all signals into Authenticity Score (0–100) using weighted penalty/reward. Core function in src/proguard/analytics/scoring.py, called by ProGuardMonitor.
+
+Scoring Parameters
+•	Input Entropy: Penalty if typing/mouse_entropy <0.35 (*40/30).
+•	Gaze Presence: Penalty if <0.5 (*40).
+•	App Focus: Penalty if <0.5 (*25).
+•	Emotional Context: Penalty if emotion_focus <0.7 (*45); reward if >=0.8 (+30).
+•	Anomaly Score: Penalty if >0.4 (*50, from ML baseline).
+
+Scoring Logic
+```python
+from src.proguard.analytics.scoring import calculate_authenticity_score
+
+signals = {
+    'typing_entropy': 0.72,
+    'mouse_entropy': 0.68,
+    'gaze_presence': 0.83,
+    'app_focus': 0.76,
+    'emotion_focus': 0.64,
+    'anomaly_score': 0.18
+}
+
+result = calculate_authenticity_score(signals)
+# result['score'] -> 85 (clamped 0-100)
+# result['risk_level'] -> 'low'
+# result['reasons'] -> [] or ['Low typing variability']
+```
+
+3.5 Report Generation
+Produces PDF reports mapping authenticity timeline, events, heatmaps. Orchestrated by src/proguard/analytics/proguard_monitor.py.
+
+Features
+•	Visual Timelines: Score trends, heatmap blocks (green=high, red=low).
+•	Event Logs: Timestamps for macros, low gaze, anomalies.
+•	Summaries: Avg score, dominant emotions, macro detections.
+•	API: POST /api/proguard/generate-report -> daily PDF.
+
+Sample Code (Daily PDF Generation)
+```python
+from src.proguard.analytics.proguard_monitor import ProGuardMonitor
+
+monitor = ProGuardMonitor(user_id='V001')
+monitor.start_monitoring()  # Collects data
+
+# After session
+report_path = monitor.generate_daily_report(output_path='reports/')
+print(f\"Report saved to: {report_path}\")  # reports/proguard_report_YYYYMMDD.pdf
+```
+
+Summary
+The coding implementation includes Pattern Detection (entropy/LSTM/macro), Emotion Detection (DeepFace), Gaze Tracking (Haar cascades), Score Calculation (penalties/rewards), and Report Generation (PDF timelines). ProGuard integrates **18 AI features** (from proguard_routes.py / PROGUARD.md):
+1.Mouse/Keyboard Patterns 2.Screen Activity 3.Typing LSTM 4.Gaze Detection 5.Emotion CNN 6.Authenticity Score 7.Explainable AI 8.Heatmaps 9.Macro Detector 10.Break Recommender 11.Baseline LSTM 12.Meeting Monitor 13.Emotion Correlation 14.App Ratio 15.Screenshot Analyzer 16.Timeline PDF 17.Self-Learning 18.Dashboard.
+
+By combining CV/ML with behavioral analytics, ProGuard provides reliable, explainable productivity monitoring.
+

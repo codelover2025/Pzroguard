@@ -1,0 +1,13 @@
+# ProGuard - Full Dependencies (All Features Including ML)
+# Warning: This includes large packages (TensorFlow ~500MB+)
+
+-r requirements-minimal.txt
+
+# Advanced Emotion Detection (OPTIONAL - very large download)
+deepface==0.0.79
+tensorflow==2.15.0
+
+# Advanced Face Detection (OPTIONAL - requires C++ build tools)
+# dlib==19.24.2  # Commented out - requires CMake + Visual Studio
+# Alternative: Use mediapipe instead
+mediapipe==0.10.8

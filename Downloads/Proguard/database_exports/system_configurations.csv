@@ -1,0 +1,7 @@
+id,key,value,description,updated_by,updated_at
+1,reminder_interval_hours,3,Hours between reminder notifications,1,2026-03-08 09:42:06.607597
+2,manager_notification_times,"12,14",Hours when manager notifications are sent,1,2026-03-08 09:42:06.607597
+3,working_hours_start,09:00,Standard working hours start time,1,2026-03-08 09:42:06.607597
+4,working_hours_end,18:00,Standard working hours end time,1,2026-03-08 09:42:06.607597
+5,auto_approve_days,7,Days after which pending statuses are auto-approved,1,2026-03-08 09:42:06.607597
+6,mismatch_detection_enabled,true,Enable automatic mismatch detection,1,2026-03-08 09:42:06.607597

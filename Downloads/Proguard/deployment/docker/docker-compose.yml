@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # ProGuard Web Application
+  proguard-app:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
+    container_name: proguard-app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=docker
+      - DATABASE_URL=postgresql://proguard:password@db:5432/proguard_db
+      - SECRET_KEY=${SECRET_KEY:-proguard-secret-key}
+    volumes:
+      - proguard_uploads:/app/uploads
+      - proguard_reports:/app/reports
+      - proguard_logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - proguard-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: proguard-db
+    environment:
+      - POSTGRES_DB=proguard_db
+      - POSTGRES_USER=proguard
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - proguard-network
+    restart: unless-stopped
+
+  # Redis for Caching and Session Management
+  redis:
+    image: redis:7-alpine
+    container_name: proguard-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - proguard-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: proguard-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl/certs:ro
+    depends_on:
+      - proguard-app
+    networks:
+      - proguard-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  proguard_uploads:
+    driver: local
+  proguard_reports:
+    driver: local
+  proguard_logs:
+    driver: local
+
+networks:
+  proguard-network:
+    driver: bridge

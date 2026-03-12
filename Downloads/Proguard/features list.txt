@@ -1,0 +1,7 @@
+Changes needed:
+1. in the UI remove the following :
+      1. .btn-outline-success:hover { transform: translateY(-1px); box-shadow: 0 4px 12px 	rgba(0, 0, 0, 0.15); 
+       2. 18
+	AI Features
+2. after the admin signin in admin account remove the Behavior Analytics for admin because he have to monitor others Behavior Analytics not his own ashe is the main admin
+3. in manager and vender login the  Typing Naturalness and Mouse Entropy other details are 100% with even typing or doining anything these should be in the realtime or should not be 100% everytime 

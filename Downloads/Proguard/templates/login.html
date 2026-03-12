@@ -1,0 +1,231 @@
+{% extends "base_unified.html" %}
+
+{% block title %}Login - ProGuard Work Authenticity{% endblock %}
+
+{% block content %}
+<div class="container-fluid login-container">
+    <div class="row min-vh-100">
+        <!-- Left Panel - ProGuard Branding -->
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center login-left"
+            style="background: linear-gradient(135deg, #0f172a 0%, #0ea5e9 100%);">
+            <div class="position-relative w-100 h-100" style="overflow: hidden;">
+                <!-- Decorative elements -->
+                <div class="position-absolute rounded-circle"
+                    style="top: 10%; right: 5%; width: 200px; height: 200px; background: rgba(255,255,255,0.08); border-radius: 50%;">
+                </div>
+                <div class="position-absolute rounded-circle"
+                    style="bottom: 15%; left: 5%; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%;">
+                </div>
+
+                <div class="text-center text-white h-100 d-flex align-items-center justify-content-center position-relative"
+                    style="z-index: 10;">
+                    <div class="px-4">
+                        <div class="mb-4 fade-in">
+                            <div class="mb-4" style="font-size: 4rem;">🛡️</div>
+                            <h1 class="fw-bold mb-3" style="font-size: 2.5rem;">ProGuard</h1>
+                            <h4 class="fw-light text-light mb-5">Work Authenticity Platform</h4>
+                            <p class="lead text-light" style="font-size: 1.1rem; max-width: 400px; margin: 0 auto;">
+                                AI-powered behavioral analytics to ensure work authenticity and detect deceptive
+                                activity patterns
+                            </p>
+                        </div>
+                        <hr class="my-5" style="border-color: rgba(255,255,255,0.2);">
+                        <div class="row text-center mt-5 g-4">
+                            <div class="col-6">
+                                <div class="fw-bold" style="font-size: 1.8rem;">94.2%</div>
+                                <small class="text-light">Detection Accuracy</small>
+                            </div>
+                            <div class="col-6">
+                                <div class="fw-bold" style="font-size: 1.8rem;">Real-Time</div>
+                                <small class="text-light">Analysis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center login-right" style="background: #f8fafc;">
+            <div class="w-100" style="max-width: 420px; padding: 3rem 2rem;">
+                <!-- Logo -->
+                <div class="text-center mb-4">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🛡️</div>
+                    <h2 class="fw-bold mb-2" style="color: #0f172a;">Sign In</h2>
+                    <p class="text-muted">Access your ProGuard workspace</p>
+                </div>
+
+                <!-- Login Form -->
+                <form method="POST" class="needs-validation" novalidate id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-medium">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: white; border: 1px solid #e2e8f0;">
+                                <i class="fas fa-user" style="color: #0ea5e9;"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username"
+                                placeholder="Enter your username" required style="border-left: none;">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-medium">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: white; border: 1px solid #e2e8f0;">
+                                <i class="fas fa-lock" style="color: #0ea5e9;"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Enter your password" required style="border-left: none;">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rememberMe"
+                                style="border: 1px solid #e2e8f0;">
+                            <label class="form-check-label" for="rememberMe" style="color: #475569;">
+                                Remember me for 30 days
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg fw-medium"
+                            style="background: #0ea5e9; border: none; padding: 12px;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Demo Access -->
+                <div class="card border-0 mb-4" style="background: #f1f5f9;">
+                    <div class="card-body">
+                        <h6 class="card-title fw-bold mb-3 text-center" style="color: #0f172a;">Quick Demo Access</h6>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm" onclick="quickLogin('admin', 'admin123')"
+                                style="background: white; border: 1px solid #e2e8f0; color: #0f172a;">
+                                <i class="fas fa-user-shield me-2" style="color: #0ea5e9;"></i><strong>Admin</strong>
+                                <small class="d-block text-muted">Full system access</small>
+                                </but ton>
+                                <button class="btn btn-sm" onclick="quickLogin('manager1', 'manager123')"
+                                    style="background: white; border: 1px solid #e2e8f0; color: #0f172a;">
+                                    <i class="fas fa-user-tie me-2" style="color: #10b981;"></i><strong>Manager</strong>
+                                    <small class="d-block text-muted">Team oversight</small>
+                                </button>
+                                <button class="btn btn-sm" onclick="quickLogin('vendor1', 'vendor123')"
+                                    style="background: white; border: 1px solid #e2e8f0; color: #0f172a;">
+                                    <i class="fas fa-user me-2" style="color: #f59e0b;"></i><strong>Employee</strong>
+                                    <small class="d-block text-muted">Status tracking</small>
+                                </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" style="border-color: #e2e8f0;">
+
+                <div class="text-center">
+                    <small class="text-muted">© 2025 ProGuard Technologies. All rights reserved.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        background: #f8fafc;
+    }
+
+    .input-group-text {
+        background: white !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    .input-group .form-control {
+        border-left: none;
+        border: 1px solid #e2e8f0;
+    }
+
+    .input-group .form-control:focus {
+        border-color: #0ea5e9;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-info:hover,
+    .btn-outline-success:hover {
+        transform: translateY(-1px);
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 991px) {
+        .login-left {
+            display: none !important;
+        }
+
+        .login-right {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+
+        .login-right>div {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem !important;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function quickLogin(username, password) {
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = password;
+        document.getElementById('loginForm').submit();
+    }
+
+    // Add entrance animation
+    document.addEventListener('DOMContentLoaded', function () {
+        const rightPanel = document.querySelector('.col-lg-5 > div');
+        if (rightPanel) {
+            rightPanel.style.opacity = '0';
+            rightPanel.style.transform = 'translateX(30px)';
+
+            setTimeout(function () {
+                rightPanel.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                rightPanel.style.opacity = '1';
+                rightPanel.style.transform = 'translateX(0)';
+            }, 200);
+        }
+
+        // Form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
+{% endblock %}

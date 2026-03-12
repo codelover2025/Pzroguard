@@ -1,0 +1,4 @@
+id,manager_id,user_id,full_name,department,team_name,email,phone,created_at
+1,M001,2,Rahul Sharma,ATD_WCS_MSE7_MS1,Team Alpha,rahul.sharma@proguard.ai,+91-98765-43210,2026-03-08 09:42:04.357221
+2,M002,3,Priya Patel,ATD_WCS_MSE7_MS2,Team Beta,priya.patel@proguard.ai,+91-98765-43211,2026-03-08 09:42:04.539911
+3,M003,4,Amit Kumar,ATD_WCS_MSE7_MS3,Team Gamma,amit.kumar@proguard.ai,+91-98765-43212,2026-03-08 09:42:04.544695

@@ -1,0 +1,177 @@
+CHAPTER 3: CODING OF FUNCTIONS - FULL 18 FEATURES
+
+This chapter details **all 18 major modules** of ProGuard, the AI-Based Fake Productivity Detection System. Each 3.x subsection covers implementation, algorithms, and sample code from source files. Python + OpenCV, DeepFace, psutil, matplotlib, reportlab, etc.
+
+3.1 Mouse & Keyboard Pattern Detection (src/proguard/collectors/mouse_keyboard.py)
+Monitors input to detect macros/jigglers via entropy.
+Algorithms: Shannon entropy (mouse angles/key intervals), macro via variance<0.1.
+Sample Code:
+```python
+collector = MouseKeyboardCollector()
+# on_mouse_move, on_key_press callbacks
+metrics = collector.get_current_metrics()
+# {'mouse_entropy': 0.68, 'keyboard_entropy': 0.72, 'macro_detected': False}
+```
+
+3.2 Screen Activity Monitor (src/proguard/collectors/screen_activity.py)
+Tracks active apps/windows via psutil/win32gui, productive_ratio.
+Algorithms: PRODUCTIVE_APPS classification, time tracking.
+Sample Code:
+```python
+monitor = ScreenActivityMonitor()
+metrics = monitor.get_current_metrics()
+# {'productivity_ratio': 0.76, 'current_app': 'code.exe', 'top_apps': [...]}
+```
+
+3.3 Typing Rhythm Analysis (src/proguard/analytics/typing_rhythm.py)
+LSTM/entropy for human vs bot typing.
+Algorithms: Intervals normalized, LSTM sigmoid 0-1, rhythm_entropy.
+Sample Code:
+```python
+analyzer = TypingRhythmAnalyzer()
+analyzer.add_keystroke(time.time(), 'a')
+metrics = analyzer.get_current_metrics()
+# {'typing_authenticity': 0.92, 'rhythm_entropy': 0.85}
+```
+
+3.4 Webcam Gaze Detection (src/proguard/collectors/webcam_monitor.py)
+Haar cascades for face/eyes.
+Algorithms: detectMultiScale, eyes>=2 -> gaze_on_screen.
+Sample Code:
+```python
+monitor = WebcamMonitor()
+metrics = monitor.get_current_metrics()
+# {'attention_ratio': 0.83, 'gaze_history': [True, True, False]}
+```
+
+3.5 Emotion Detection (src/proguard/collectors/webcam_monitor.py)
+DeepFace CNN.
+Algorithms: DeepFace.analyze('emotion'), weighted emotion_focus.
+Sample Code:
+```python
+emotion = monitor.detect_emotion(frame)  # 'neutral'
+metrics = monitor.get_emotion_distribution()  # {'neutral': 0.7}
+```
+
+3.6 Authenticity Score Calculation (src/proguard/analytics/scoring.py)
+Weighted penalties/rewards.
+Algorithms: Clamp/normalize, e.g., typing<0.35 *40 penalty.
+Sample Code:
+```python
+result = calculate_authenticity_score(signals)
+# {'score': 85, 'risk_level': 'low'}
+```
+
+3.7 Explainable AI (XAI) (src/proguard/analytics/explainable_ai.py)
+SHAP/threshold reasons.
+Algorithms: Feature importances from RF, _get_reason_text.
+Sample Code:
+```python
+explainer = ExplainableAI()
+explanation = explainer.explain_score(signals, 85)
+# {'assessment': 'High authenticity', 'recommendations': [...]}
+```
+
+3.8 Real-Time Suspicion Heatmap (src/proguard/analytics/heatmap_generator.py)
+Matplotlib time buckets.
+Algorithms: Bucket scores, sns.heatmap cmap red-yellow-green.
+Sample Code:
+```python
+generator = HeatmapGenerator()
+generator.add_score(datetime.now(), 85)
+img_b64 = generator.generate_daily_heatmap()  # PNG base64
+```
+
+3.9 Macro Pattern Detector (src/proguard/analytics/macro_detector.py)
+Sequence repetition + IsolationForest.
+Algorithms: Counter sequences>=3 + timing variance<0.01.
+Sample Code:
+```python
+detector = MacroPatternDetector()
+metrics = detector.get_current_metrics()
+# {'keyboard_macro_detected': True, 'macro_risk_score': 0.85}
+```
+
+3.10 AI Break Recommender (src/proguard/analytics/proguard_monitor.py)
+Fatigue detection.
+Algorithms: attention<0.3 or sad/angry emotions.
+Sample Code:
+```python
+monitor.trigger_break_recommendation()
+# {'recommended': True, 'reason': 'Low attention detected'}
+```
+
+3.11 User Behavior Baseline (src/proguard/analytics/baseline_model.py)
+LSTM/Z-score.
+Algorithms: Daily stats mean/std, z>2 deviation.
+Sample Code:
+```python
+modeler = BaselineModeler('V001')
+is_normal, anomaly, deviating = modeler.is_behavior_normal(signals)
+```
+
+3.12 Meeting Monitor (src/proguard/analytics/meeting_monitor.py)
+psutil for Zoom/Teams.
+Algorithms: MEETING_APPS detect, camera/mic + gaze engagement.
+Sample Code:
+```python
+monitor.update_meeting_status()
+metrics = monitor.get_current_metrics()
+# {'in_meeting': True, 'average_engagement': 0.92}
+```
+
+3.13 Emotion-to-Productivity Correlation (src/proguard/analytics/proguard_monitor.py)
+Weighted emotion_focus.
+Algorithms: neutral=1.0, sad=0.3 sum(dist * weight).
+Sample Code:
+```python
+emotion_focus = monitor._calculate_emotion_focus(webcam_metrics)
+```
+
+3.14 App Ratio (integrated in screen_activity.py + scoring.py)
+Productive/non-productive %.
+Algorithms: PRODUCTIVE_APPS match, ratio penalty<0.5 *25.
+Sample Code:
+```python
+ratio = monitor.get_productivity_ratio()  # 0.76
+```
+
+3.15 Screenshot Analyzer (src/proguard/analytics/screenshot_analyzer.py)
+pyautogui + OCR blur.
+Algorithms: pytesseract sensitive regex, GaussianBlur.
+Sample Code:
+```python
+analyzer = ScreenshotAnalyzer()
+analysis = analyzer.process_screenshot()
+# {'activity': 'coding', 'sensitive_regions_blurred': 2}
+```
+
+3.16 Timeline Generator (src/proguard/analytics/timeline_generator.py)
+ReportLab PDF table.
+Algorithms: Segments by events, fake<40 red rows.
+Sample Code:
+```python
+generator.add_event(ts, 'macro', 'Detected', 20)
+generator.generate_pdf_report('report.pdf')
+```
+
+3.17 Self-Learning (src/proguard/analytics/baseline_model.py)
+Daily retrain.
+Algorithms: 20+ days -> LSTM autoencoder epochs=50.
+Sample Code:
+```python
+modeler.train_lstm_baseline()
+```
+
+3.18 Dashboard (proguard_routes.py + proguard_monitor.py)
+Unified API/metrics.
+Algorithms: get_current_dashboard_data() aggregates all.
+Sample Code:
+```python
+@proguard_bp.route('/api/proguard/dashboard')
+data = monitor.get_current_dashboard_data()
+# {'current_score': 85, 'heatmap_daily': b64, 'explanation': {...}}
+```
+
+**Summary**: ProGuard's 18 modules form a complete AI system. Core: behavioral signals -> ML scoring -> explainable reports. Technologies: OpenCV, DeepFace, psutil, Keras, matplotlib, ReportLab. Deploy via Flask APIs.
+

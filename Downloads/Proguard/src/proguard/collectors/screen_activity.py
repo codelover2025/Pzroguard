@@ -3,6 +3,7 @@ Feature 2: Screen Activity Monitor
 Tracks which application/window the user is using and for how long
 """
 
+import os
 import time
 import threading
 from datetime import datetime
@@ -25,22 +26,36 @@ class ScreenActivityMonitor:
     Tracks productive vs idle time
     """
     
-    # Productivity classification
-    PRODUCTIVE_APPS = {
+    # Load app lists from config.yaml (with fallback defaults)
+    _DEFAULT_PRODUCTIVE = {
         'code', 'visual studio', 'pycharm', 'intellij', 'eclipse',
         'sublime', 'notepad++', 'atom', 'vscode',
         'excel', 'word', 'powerpoint', 'outlook',
-        'chrome', 'firefox', 'edge',  # Browser (depends on usage)
+        'chrome', 'firefox', 'edge',
         'teams', 'slack', 'zoom', 'meet',
         'terminal', 'cmd', 'powershell', 'bash',
         'git', 'github', 'gitlab'
     }
-    
-    NON_PRODUCTIVE_APPS = {
+
+    _DEFAULT_NON_PRODUCTIVE = {
         'youtube', 'netflix', 'facebook', 'instagram', 'twitter',
         'reddit', 'tiktok', 'game', 'steam', 'discord',
         'spotify', 'vlc', 'media player'
     }
+
+    try:
+        import yaml as _yaml  # type: ignore
+        _cfg_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            'config.yaml'
+        )
+        with open(_cfg_path, 'r') as _f:
+            _cfg = _yaml.safe_load(_f) or {}
+        PRODUCTIVE_APPS = set(_cfg.get('PRODUCTIVE_APPS', _DEFAULT_PRODUCTIVE))
+        NON_PRODUCTIVE_APPS = set(_cfg.get('NON_PRODUCTIVE_APPS', _DEFAULT_NON_PRODUCTIVE))
+    except Exception:
+        PRODUCTIVE_APPS = _DEFAULT_PRODUCTIVE
+        NON_PRODUCTIVE_APPS = _DEFAULT_NON_PRODUCTIVE
     
     def __init__(self, check_interval=2, storage_path='data/screen_logs'):
         self.check_interval = check_interval  # seconds

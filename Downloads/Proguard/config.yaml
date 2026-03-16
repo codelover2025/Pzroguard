@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────
+# ProGuard Configuration
+# Edit this file to customize behavior
+# ─────────────────────────────────────────────
+
+# ── Scoring Weights (must sum to 1.0) ──
+SCORING_WEIGHTS:
+  typing_entropy: 0.20
+  mouse_entropy: 0.15
+  gaze_presence: 0.25
+  app_focus: 0.20
+  emotion_focus: 0.10
+  anomaly_penalty: 0.10
+
+# ── Risk Level Thresholds ──
+RISK_LEVELS:
+  genuine_work: 80    # score >= 80  → Genuine Work
+  suspicious: 50      # score >= 50  → Suspicious
+  fake_activity: 0    # score <  50  → Fake Activity
+
+# ── Productive Applications ──
+PRODUCTIVE_APPS:
+  - code
+  - visual studio
+  - pycharm
+  - intellij
+  - eclipse
+  - sublime
+  - notepad++
+  - vscode
+  - excel
+  - word
+  - powerpoint
+  - outlook
+  - chrome
+  - firefox
+  - edge
+  - teams
+  - slack
+  - zoom
+  - meet
+  - terminal
+  - cmd
+  - powershell
+  - bash
+  - git
+  - github
+  - gitlab
+
+# ── Non-Productive Applications ──
+NON_PRODUCTIVE_APPS:
+  - youtube
+  - netflix
+  - facebook
+  - instagram
+  - twitter
+  - reddit
+  - tiktok
+  - game
+  - steam
+  - discord
+  - spotify
+  - vlc
+  - media player
+
+# ── Monitoring Intervals (seconds) ──
+MONITORING:
+  analysis_interval: 5        # How often to run ML analysis
+  screenshot_interval: 300    # Screenshot capture interval
+  webcam_check_interval: 2    # Webcam presence check interval
+  screen_check_interval: 2    # Window tracking interval
+
+# ── Feature Extraction Thresholds ──
+FEATURE_THRESHOLDS:
+  typing_entropy_suspicious: 0.3
+  mouse_entropy_suspicious: 0.3
+  gaze_presence_minimum: 0.5
+  app_focus_minimum: 0.4
+  idle_timeout_seconds: 30
+
+# ── ML Models ──
+ML_MODELS:
+  core_ensemble: "src/proguard/models/trained/core_ensemble_rf.pkl"
+  ensemble_scaler: "src/proguard/models/trained/ensemble_scaler.pkl"
+  mouse_anomaly: "src/proguard/models/trained/mouse_isolation_forest.pkl"
+  mouse_scaler: "src/proguard/models/trained/mouse_scaler.pkl"
+
+# ── Report Settings ──
+REPORTS:
+  output_directory: "~/Downloads"
+  format: "pdf"
+  include_heatmap: true
+  include_timeline: true

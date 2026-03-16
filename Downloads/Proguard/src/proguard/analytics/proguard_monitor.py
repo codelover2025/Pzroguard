@@ -27,6 +27,9 @@ from .timeline_generator import TimelineGenerator  # type: ignore
 # Import scoring
 from .scoring import calculate_authenticity_score  # type: ignore
 
+# Import feature extraction pipeline
+from .feature_extractor import FeatureExtractor  # type: ignore
+
 
 class ProGuardMonitor:
     """
@@ -62,6 +65,9 @@ class ProGuardMonitor:
             interval=self.config.get('screenshot_interval', 300)
         )
         
+        # Initialize ML feature extraction pipeline
+        self.feature_extractor = FeatureExtractor()
+
         # Initialize visualization & reporting (Features 7, 8, 16)
         self.explainer = ExplainableAI()
         self.heatmap_generator = HeatmapGenerator()
@@ -73,6 +79,7 @@ class ProGuardMonitor:
         # Current state
         self.current_score: float = 0
         self.current_signals: Dict[str, Any] = {}
+        self.current_features: Dict[str, float] = {}  # Full ML feature vector
         self.score_history: List[float] = []
         
         # Analysis thread
@@ -190,67 +197,63 @@ class ProGuardMonitor:
     
     def _perform_analysis(self):
         """Perform comprehensive analysis of all signals"""
-        # Collect current metrics from all sources
-        
-        # Feature 1: Mouse & Keyboard
+        # ── Step 1: Collect raw metrics from all sources ──
         input_metrics = self.mouse_keyboard.get_current_metrics()
-        
-        # Feature 2: Screen Activity
         screen_metrics = self.screen_activity.get_current_metrics()
-        
-        # Feature 3: Typing Rhythm
         typing_metrics = self.typing_rhythm.get_current_metrics()
-        
-        # Feature 4 & 5: Webcam (Gaze & Emotion)
         webcam_metrics = self.webcam_monitor.get_current_metrics()
-        
-        # Feature 9: Macro Detection
         macro_metrics = self.macro_detector.get_current_metrics()
-        
+
         # Feature 12: Meeting Monitor
         self.meeting_monitor.update_meeting_status()
-        meeting_metrics = self.meeting_monitor.get_current_metrics()
-        
-        t_ent = typing_metrics.get('rhythm_entropy', 0.0)
-        m_ent = input_metrics.get('mouse_entropy', 0.0)
-        g_pres = webcam_metrics.get('presence_ratio', 0.0)
-        a_foc = screen_metrics.get('productivity_ratio', 0.5)
-        
-        # Compile signals for scoring (Rely strictly on live hooks or live dummy hooks now)
+
+        # ── Step 2: Feature Extraction (ML Pipeline) ──
+        # Convert raw collector data → normalized feature vector
+        features = self.feature_extractor.extract_features(
+            input_metrics=input_metrics,
+            screen_metrics=screen_metrics,
+            typing_metrics=typing_metrics,
+            webcam_metrics=webcam_metrics,
+            macro_metrics=macro_metrics,
+        )
+
+        # ── Step 3: Build signals dict for scoring engine ──
+        # Map extracted features to the scoring interface
         signals = {
-            'typing_entropy': t_ent,
-            'mouse_entropy': m_ent,
-            'gaze_presence': g_pres,
-            'app_focus': a_foc,
-            'emotion_focus': self._calculate_emotion_focus(webcam_metrics)
+            'typing_entropy': features['typing_entropy'],
+            'mouse_entropy': features['mouse_entropy'],
+            'gaze_presence': features['gaze_presence'],
+            'app_focus': features['app_focus'],
+            'emotion_focus': features['emotion_focus'],
         }
 
-        # Compute anomaly score after base signals are available
+        # Compute anomaly score using ML model or heuristic baseline
         signals['anomaly_score'] = self._calculate_anomaly_score(signals)
-        
+
+        # Store full feature vector alongside signals for dashboard
         self.current_signals = signals
-        
-        # Feature 6: Calculate Work Authenticity Score
+        self.current_features = features  # Full 10-feature vector
+
+        # ── Step 4: Calculate Work Authenticity Score ──
         score_result = calculate_authenticity_score(signals)
         self.current_score = score_result['score']
-        
+
         # Add to history
         self.score_history.append(float(self.current_score))
-        if len(self.score_history) > 1440:  # Keep last 24 hours (at 5s or 1 min intervals)
-            # Remove oldest entries to keep size within 1440
+        if len(self.score_history) > 1440:
             while len(self.score_history) > 1440:
                 self.score_history.pop(0)
-        
-        # Feature 8: Add to heatmap
+
+        # ── Step 5: Feed downstream modules ──
+        # Feature 8: Heatmap
         self.heatmap_generator.add_score(datetime.now(), self.current_score)
-        
-        # Feature 16: Add to timeline
+
+        # Feature 16: Timeline
         self._add_timeline_events(signals, self.current_score, input_metrics, screen_metrics)
-        
-        # Feature 11: Check against baseline
+
+        # Feature 11: Baseline anomaly check
         if self.baseline_model.baseline_stats:
             is_normal, anomaly_score, deviating = self.baseline_model.is_behavior_normal(signals)
-            
             if not is_normal:
                 print(f"[WARNING] Abnormal behavior detected (anomaly: {anomaly_score:.2f})")
                 print(f"   Deviating features: {[f['feature'] for f in deviating]}")
@@ -378,6 +381,10 @@ class ProGuardMonitor:
             'current_score': self.current_score,
             'risk_level': self._get_risk_level(self.current_score),
             'signals': self.current_signals,
+            'feature_vector': getattr(self, 'current_features', {}),
+            'feature_descriptions': self.feature_extractor.describe_features(
+                getattr(self, 'current_features', {})
+            ),
             'explanation': explanation,
             'trend': trend,
             'heatmap_daily': daily_heatmap,

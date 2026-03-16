@@ -12,6 +12,7 @@ from .meeting_monitor import MeetingMonitor
 from .screenshot_analyzer import ScreenshotAnalyzer
 from .heatmap_generator import HeatmapGenerator
 from .timeline_generator import TimelineGenerator
+from .feature_extractor import FeatureExtractor
 from .proguard_monitor import ProGuardMonitor
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "ScreenshotAnalyzer",
     "HeatmapGenerator",
     "TimelineGenerator",
+    "FeatureExtractor",
     "ProGuardMonitor"
 ]
 

@@ -241,7 +241,7 @@ class NotificationService:
                         </div>
                         <div style="text-align: center; padding: 15px; background: #e2e6ea; border-radius: 8px;">
                             <div style="font-size: 24px; font-weight: bold; color: #6c757d;">{total_vendors}</div>
-                            <div style="font-size: 12px; color: #6c757d;">TOTAL TEAM</div>
+                            <div style="font-size: 12px; color: #6c757d;">TEAM MEMBER</div>
                         </div>
                     </div>
         """

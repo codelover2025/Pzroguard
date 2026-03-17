@@ -236,12 +236,19 @@ def dashboard():
             'system_issues': 0
         }
         
+        managers_list = Manager.query.all()
+        selected_manager = request.args.get('manager_id', 'all')
+        
         # Admin sees all recent and pending records company-wide
         recent_statuses = DailyStatus.query.order_by(DailyStatus.status_date.desc()).limit(15).all()
         pending_mismatches = MismatchRecord.query.filter_by(manager_approval=ApprovalStatus.PENDING).all()
         
-        # Populate Today's Overview (Company-wide)
-        all_today = DailyStatus.query.filter_by(status_date=today).all()
+        # Populate Today's Overview (Company-wide or specific team)
+        all_today_query = DailyStatus.query.filter_by(status_date=today)
+        if selected_manager != 'all':
+            all_today_query = all_today_query.join(Vendor).filter(Vendor.manager_id == selected_manager)
+            
+        all_today = all_today_query.all()
         present_count = sum(1 for s in all_today if s.status in [AttendanceStatus.IN_OFFICE_FULL, AttendanceStatus.IN_OFFICE_HALF, AttendanceStatus.WFH_FULL, AttendanceStatus.WFH_HALF])
         pending_approvals = sum(1 for s in all_today if s.approval_status == ApprovalStatus.PENDING)
         
@@ -271,7 +278,9 @@ def dashboard():
                            system_stats=system_stats,
                            total_vendors=total_vendors,
                            total_managers=total_managers,
-                           total_statuses_today=total_statuses_today)
+                           total_statuses_today=total_statuses_today,
+                           managers_list=managers_list if current_user.role == UserRole.ADMIN else None,
+                           selected_manager=selected_manager if current_user.role == UserRole.ADMIN else None)
 
 @app.route('/vendor/dashboard')
 @login_required

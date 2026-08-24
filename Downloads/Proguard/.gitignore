@@ -168,7 +168,9 @@ main_app_simple.py
 *_backup.py
 
 # Development files
-test_*.py
+# Ignore ad-hoc scripts at the project root, not pytest files under tests/
+/test_*.py
+!tests/test_*.py
 debug_*.py
 
 # Deployment files

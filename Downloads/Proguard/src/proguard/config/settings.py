@@ -43,6 +43,16 @@ class BaseConfig:
     # Logging settings
     LOG_LEVEL = 'INFO'
     LOG_FOLDER = 'logs'
+
+    # Auth and security defaults
+    AUTH_MAX_LOGIN_ATTEMPTS = int(os.environ.get("AUTH_MAX_LOGIN_ATTEMPTS", 5))
+    AUTH_LOCKOUT_SECONDS = int(os.environ.get("AUTH_LOCKOUT_SECONDS", 900))
+    PASSWORD_MIN_LENGTH = int(os.environ.get("PASSWORD_MIN_LENGTH", 10))
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
+    # Control automatic data bootstrap for each environment
+    CREATE_DEMO_DATA = False
     
 
 class DevelopmentConfig(BaseConfig):
@@ -61,6 +71,7 @@ class DevelopmentConfig(BaseConfig):
     # Development-specific settings
     TEMPLATES_AUTO_RELOAD = True
     SEND_FILE_MAX_AGE_DEFAULT = 0
+    CREATE_DEMO_DATA = True
 
 
 class ProductionConfig(BaseConfig):
@@ -98,6 +109,7 @@ class TestingConfig(BaseConfig):
     # Disable external services during testing
     NOTIFICATION_ENABLED = False
     AI_PREDICTIONS_ENABLED = False
+    CREATE_DEMO_DATA = False
     
     # Speed up password hashing for tests
     WTF_CSRF_ENABLED = False

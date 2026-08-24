@@ -4,9 +4,6 @@ ProGuard API Package
 This package contains all API blueprints and routes for the ProGuard application.
 """
 
-from flask import Blueprint
-
-
 def register_blueprints(app):
     """
     Register all API blueprints with the Flask application.
@@ -17,9 +14,11 @@ def register_blueprints(app):
     import errors as soon as the package was imported.
     """
     from .auth import auth_bp
+    from .health import health_bp
 
     # Core auth endpoints
     app.register_blueprint(auth_bp)
+    app.register_blueprint(health_bp)
 
 
 __all__ = ["register_blueprints"]

@@ -38,7 +38,7 @@ def create_app(config_name=None):
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'api.login'
+    login_manager.login_view = 'auth.login'
     
     @login_manager.user_loader
     def load_user(user_id):
@@ -54,15 +54,14 @@ def create_app(config_name=None):
     if not app.config.get('TESTING', False):
         start_notification_scheduler()
     
-    # Create database tables and demo data
+    # Create database tables and optional demo data
     with app.app_context():
-        create_database_tables()
-        initialize_demo_data()
+        create_database_tables(app)
     
     return app
 
 
-def create_database_tables():
+def create_database_tables(app):
     """Create database tables if they don't exist"""
     from ..models import db
     from ..models.user import User
@@ -76,16 +75,8 @@ def create_database_tables():
     os.makedirs(instance_dir, exist_ok=True)
 
     db.create_all()
-    
-    # Check if demo data already exists
-    if User.query.count() == 0:
-        from ..services.demo_data_service import create_demo_data
-        create_demo_data()
 
-
-def initialize_demo_data():
-    """Initialize the database with demo data for local development"""
-    from ..models.user import User
-    if User.query.count() == 0:
+    # Bootstrap demo data only when explicitly enabled.
+    if app.config.get("CREATE_DEMO_DATA", False) and User.query.count() == 0:
         from ..services.demo_data_service import create_demo_data
         create_demo_data()
